@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Audit": {
+      "title": "Audit",
+      "description": "Represents a completed audit for a SPPG.",
+      "type": "object",
+      "properties": {
+        "namaSPPG": {
+          "type": "string",
+          "description": "Name of the SPPG"
+        },
+        "alamatSPPG": {
+          "type": "string",
+          "description": "Address of the SPPG"
+        },
+        "tanggalEvaluasi": {
+          "type": "string",
+          "description": "Date of evaluation in YYYY-MM-DD format"
+        },
+        "golongan": {
+          "type": "string",
+          "enum": ["A", "B", "C"],
+          "description": "Golongan of the SPPG"
+        },
+        "answers": {
+          "type": "object",
+          "description": "Map of item IDs to answers ('YA' or 'TIDAK')"
+        },
+        "totalPenalty": {
+          "type": "number",
+          "description": "Total penalty score calculated"
+        },
+        "userId": {
+          "type": "string",
+          "description": "User ID of the auditor"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of audit creation"
+        }
+      },
+      "required": [
+        "namaSPPG",
+        "alamatSPPG",
+        "tanggalEvaluasi",
+        "golongan",
+        "answers",
+        "totalPenalty",
+        "userId",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "audits/{auditId}": {
+      "schema": {
+        "$ref": "#/entities/Audit"
+      },
+      "description": "Store audit results submitted by users."
+    }
+  }
+}
