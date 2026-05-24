@@ -1,9 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FileText, Calculator, AlertTriangle, CheckCircle2, XCircle, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Calculator, AlertTriangle, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { checklistData, Golongan } from './data';
-import { db, auth, signInWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { exportToWord } from './exportUtils';
 
 const IS_PREVIEW = false; // Set false jika akan di-deploy ke Apps Script asli
@@ -38,9 +35,6 @@ const ProgresivoLogo = () => (
 );
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-
   const [namaSPPG, setNamaSPPG] = useState('');
   const [alamatSPPG, setAlamatSPPG] = useState('');
   const [namaAuditor, setNamaAuditor] = useState('');
@@ -85,14 +79,6 @@ export default function App() {
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleAnswerChange = (id: string, value: Answer) => {
     setAnswers(prev => ({
@@ -174,12 +160,6 @@ export default function App() {
   }, [answers]);
 
   const handleSubmit = async () => {
-    // Optional login check, commented out for standalone GAS form
-    // if (!user) {
-    //   alert("Harap login terlebih dahulu.");
-    //   return;
-    // }
-
     if (!namaSPPG || !alamatSPPG || !tanggalEvaluasi || !namaAuditor) {
       alert("Harap lengkapi Informasi Fasilitas.");
       return;
@@ -217,17 +197,6 @@ export default function App() {
         });
       }
 
-      // Also save to Firebase if needed (kept for compatibility)
-      if (user) {
-        const auditsRef = collection(db, 'audits');
-        await addDoc(auditsRef, {
-          ...payload,
-          answers,
-          userId: user.uid,
-          createdAt: serverTimestamp()
-        });
-      }
-      
       const message = progressStats.isComplete 
         ? `Audit Selesai dan Berhasil Disimpan ${IS_PREVIEW ? '(Mode Preview)' : 'ke Database'}!\nSkor Akhir: ${finalScore}/100`
         : `Progress Audit Berhasil Disimpan ${IS_PREVIEW ? '(Mode Preview)' : 'ke Database'}!\nSkor Sementara: ${finalScore}/100`;
@@ -251,32 +220,6 @@ export default function App() {
       setIsSubmitting(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">
-        Memuat...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200/60 max-w-md w-full text-center border border-slate-100">
-          <FileText className="w-16 h-16 text-[#F15A24] mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Audit Laik Higiene</h2>
-          <p className="text-slate-600 mb-8">Silakan login menggunakan akun Google untuk mengakses formulir audit.</p>
-          <button 
-            onClick={signInWithGoogle}
-            className="w-full bg-[#003d79] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#002f5e] transition shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200/60"
-          >
-            Login dengan Google
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-800 font-sans pb-32 selection:bg-[#003d79] selection:text-white relative"><div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-[#003d79]/5 to-transparent pointer-events-none"></div>
@@ -303,13 +246,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <button 
-              onClick={logout}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors flex items-center"
-              title="Logout"
-            >
-              <LogOut className="w-5 h-5 text-slate-600" />
-            </button>
           </div>
         </div>
       </header>
